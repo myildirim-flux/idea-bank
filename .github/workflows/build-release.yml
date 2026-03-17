@@ -1,0 +1,224 @@
+# ============================================================================
+# IDEA BANK - AUTOMATED BUILD & RELEASE WORKFLOW
+# Secure AI-Powered Note-Taking App
+# ============================================================================
+# This workflow builds the Android APK and creates a GitHub Release
+# Triggered on version tags (v*.*.*) or manual dispatch
+# ============================================================================
+
+name: 🚀 Build & Release APK
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+env:
+  FLUTTER_VERSION: '3.38.5'
+  JAVA_VERSION: '17'
+
+jobs:
+  # ============================================================================
+  # BUILD JOB
+  # ============================================================================
+  build:
+    name: 🔨 Build Android APK
+    runs-on: ubuntu-latest
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      
+    steps:
+      # ────────────────────────────────────────────────────────────────────────
+      # SETUP
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: 🏷️ Get Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: ✅ Validate Version Match
+        run: |
+          # Extract version from pubspec.yaml
+          PUBSPEC_VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          # Remove 'v' prefix from tag if present
+          TAG_VERSION_CLEAN="${TAG_VERSION#v}"
+          
+          echo "📋 Pubspec version: $PUBSPEC_VERSION"
+          echo "🏷️  Tag version: $TAG_VERSION_CLEAN"
+          
+          if [ "$PUBSPEC_VERSION" != "$TAG_VERSION_CLEAN" ]; then
+            echo "❌ ERROR: Version mismatch!"
+            echo "   pubspec.yaml has version '$PUBSPEC_VERSION'"
+            echo "   Git tag is '$TAG_VERSION'"
+            echo ""
+            echo "💡 Please update pubspec.yaml to match the tag version."
+            exit 1
+          fi
+          
+          echo "✅ Versions match!"
+
+      - name: ☕ Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: 🐦 Setup Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 🔎 Verify Flutter/Dart Versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: 📦 Get Dependencies
+        run: flutter pub get
+
+      # ────────────────────────────────────────────────────────────────────────
+      # ENVIRONMENT SETUP
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 🔐 Create Environment File
+        run: |
+          cat << EOF > .env
+          APPWRITE_ENDPOINT=${{ secrets.APPWRITE_ENDPOINT }}
+          APPWRITE_PROJECT_ID=${{ secrets.APPWRITE_PROJECT_ID }}
+          APPWRITE_DATABASE_ID=${{ secrets.APPWRITE_DATABASE_ID }}
+          APPWRITE_TABLE_ID=${{ secrets.APPWRITE_TABLE_ID }}
+          APPWRITE_USER_TABLE_ID=${{ secrets.APPWRITE_USER_TABLE_ID }}
+          APPWRITE_BUCKET_ID=${{ secrets.APPWRITE_BUCKET_ID }}
+          APPWRITE_API_KEY=${{ secrets.APPWRITE_API_KEY }}
+          EOF
+          
+      - name: 🔄 Generate Code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # ────────────────────────────────────────────────────────────────────────
+      # BUILD
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 🏗️ Build APK (Release)
+        run: |
+          flutter build apk --release --split-per-abi
+          flutter build apk --release
+
+      - name: 📝 List Build Outputs
+        run: |
+          echo "=== APK Files ==="
+          ls -la build/app/outputs/flutter-apk/
+          
+      # ────────────────────────────────────────────────────────────────────────
+      # ARTIFACTS
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📤 Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apks
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
+          retention-days: 5
+
+  # ============================================================================
+  # RELEASE JOB
+  # ============================================================================
+  release:
+    name: 📦 Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: 📥 Download APK Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apks
+          path: ./apks
+
+      - name: 📝 Rename APKs
+        run: |
+          cd apks
+          mv app-release.apk IdeaBank-${{ needs.build.outputs.version }}-universal.apk
+          mv app-armeabi-v7a-release.apk IdeaBank-${{ needs.build.outputs.version }}-armeabi-v7a.apk
+          mv app-arm64-v8a-release.apk IdeaBank-${{ needs.build.outputs.version }}-arm64-v8a.apk
+          mv app-x86_64-release.apk IdeaBank-${{ needs.build.outputs.version }}-x86_64.apk
+          ls -la
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.build.outputs.version }}
+          name: "🧠 Idea Bank ${{ needs.build.outputs.version }}"
+          body: |
+            ## 🚀 Idea Bank ${{ needs.build.outputs.version }}
+            
+            **Your Ideas, Yours Alone** - Secure AI-Powered Note-Taking App
+            
+            ---
+            
+            ### 📥 Download Options
+            
+            | File | Description | Compatibility |
+            |------|-------------|---------------|
+            | `IdeaBank-${{ needs.build.outputs.version }}-universal.apk` | Universal APK | All Android devices |
+            | `IdeaBank-${{ needs.build.outputs.version }}-arm64-v8a.apk` | 64-bit ARM | Most modern phones |
+            | `IdeaBank-${{ needs.build.outputs.version }}-armeabi-v7a.apk` | 32-bit ARM | Older phones |
+            | `IdeaBank-${{ needs.build.outputs.version }}-x86_64.apk` | 64-bit x86 | Emulators, Chromebooks |
+            
+            > 💡 **Tip:** If unsure, download the **universal** APK.
+            
+            ---
+            
+            ### ⚠️ Important Notes
+            
+            - This APK does **NOT** include cloud sync functionality
+            - Cloud sync requires building with your own Appwrite credentials
+            - See [Build Instructions](../../README.md#-building-from-source) for full setup
+            
+            ---
+            
+            ### 🔒 Security
+            
+            - All data is encrypted with AES-256
+            - Your passphrase never leaves your device
+            - No analytics or tracking included
+            
+            ---
+            
+            ### 📋 Changelog
+            
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ steps.version.outputs.version }}/CHANGELOG.md) for detailed changes.
+            
+          files: |
+            apks/IdeaBank-${{ needs.build.outputs.version }}-universal.apk
+            apks/IdeaBank-${{ needs.build.outputs.version }}-arm64-v8a.apk
+            apks/IdeaBank-${{ needs.build.outputs.version }}-armeabi-v7a.apk
+            apks/IdeaBank-${{ needs.build.outputs.version }}-x86_64.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

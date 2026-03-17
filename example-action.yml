@@ -1,0 +1,365 @@
+# ============================================================================
+# ECLIPSE PLAYER - AUTOMATED BUILD & RELEASE WORKFLOW
+# A modern, feature-rich music player for Android and Windows
+# ============================================================================
+# This workflow builds Android APKs and Windows executables, then creates
+# a GitHub Release with all artifacts.
+# Triggered on version tags (v*.*.*) or manual dispatch
+# ============================================================================
+
+name: 🌑 Build & Release Eclipse Player
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      build_android:
+        description: 'Build Android APK'
+        type: boolean
+        default: true
+      build_windows:
+        description: 'Build Windows executable'
+        type: boolean
+        default: true
+
+env:
+  FLUTTER_VERSION: '3.32.0'
+  JAVA_VERSION: '17'
+
+jobs:
+  # ============================================================================
+  # ANDROID BUILD JOB
+  # ============================================================================
+  build-android:
+    name: 🤖 Build Android APK
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' || github.event.inputs.build_android == 'true' }}
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      
+    steps:
+      # ────────────────────────────────────────────────────────────────────────
+      # SETUP
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: 🏷️ Get Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: ✅ Validate Version Match
+        run: |
+          # Extract version from pubspec.yaml
+          PUBSPEC_VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          # Remove 'v' prefix from tag if present
+          TAG_VERSION_CLEAN="${TAG_VERSION#v}"
+          
+          echo "📋 Pubspec version: $PUBSPEC_VERSION"
+          echo "🏷️  Tag version: $TAG_VERSION_CLEAN"
+          
+          if [ "$PUBSPEC_VERSION" != "$TAG_VERSION_CLEAN" ]; then
+            echo "❌ ERROR: Version mismatch!"
+            echo "   pubspec.yaml has version '$PUBSPEC_VERSION'"
+            echo "   Git tag is '$TAG_VERSION'"
+            echo ""
+            echo "💡 Please update pubspec.yaml to match the tag version."
+            exit 1
+          fi
+          
+          echo "✅ Versions match!"
+
+      - name: ☕ Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: 🐦 Setup Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Get Dependencies
+        run: flutter pub get
+
+      # ────────────────────────────────────────────────────────────────────────
+      # BUILD
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 🏗️ Build APK (Release)
+        run: |
+          flutter build apk --release --split-per-abi
+          flutter build apk --release
+
+      - name: 📝 List Build Outputs
+        run: |
+          echo "=== APK Files ==="
+          ls -la build/app/outputs/flutter-apk/
+          
+      # ────────────────────────────────────────────────────────────────────────
+      # ARTIFACTS
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📤 Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
+          retention-days: 5
+
+  # ============================================================================
+  # WINDOWS BUILD JOB
+  # ============================================================================
+  build-windows:
+    name: 🪟 Build Windows Executable
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'push' || github.event.inputs.build_windows == 'true' }}
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      
+    steps:
+      # ────────────────────────────────────────────────────────────────────────
+      # SETUP
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: 🏷️ Get Version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: ✅ Validate Version Match
+        shell: bash
+        run: |
+          # Extract version from pubspec.yaml
+          PUBSPEC_VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          # Remove 'v' prefix from tag if present
+          TAG_VERSION_CLEAN="${TAG_VERSION#v}"
+          
+          echo "📋 Pubspec version: $PUBSPEC_VERSION"
+          echo "🏷️  Tag version: $TAG_VERSION_CLEAN"
+          
+          if [ "$PUBSPEC_VERSION" != "$TAG_VERSION_CLEAN" ]; then
+            echo "❌ ERROR: Version mismatch!"
+            echo "   pubspec.yaml has version '$PUBSPEC_VERSION'"
+            echo "   Git tag is '$TAG_VERSION'"
+            echo ""
+            echo "💡 Please update pubspec.yaml to match the tag version."
+            exit 1
+          fi
+          
+          echo "✅ Versions match!"
+
+      - name: 🐦 Setup Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Get Dependencies
+        run: flutter pub get
+
+      # ────────────────────────────────────────────────────────────────────────
+      # BUILD
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 🏗️ Build Windows (Release)
+        run: flutter build windows --release
+
+      - name: 📝 List Build Outputs
+        run: |
+          echo "=== Windows Build Files ==="
+          dir build\windows\x64\runner\Release\
+          
+      # ────────────────────────────────────────────────────────────────────────
+      # PACKAGE
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📦 Create Windows ZIP
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath EclipsePlayer-Windows.zip
+          
+      # ────────────────────────────────────────────────────────────────────────
+      # ARTIFACTS
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📤 Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: EclipsePlayer-Windows.zip
+          retention-days: 5
+
+  # ============================================================================
+  # RELEASE JOB
+  # ============================================================================
+  release:
+    name: 📦 Create GitHub Release
+    needs: [build-android, build-windows]
+    if: always() && (needs.build-android.result == 'success' || needs.build-windows.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Get Version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      # ────────────────────────────────────────────────────────────────────────
+      # DOWNLOAD ARTIFACTS
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📥 Download Android Artifacts
+        if: needs.build-android.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apks
+          path: ./android-apks
+          
+      - name: 📥 Download Windows Artifacts
+        if: needs.build-windows.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release
+          path: ./windows-release
+
+      # ────────────────────────────────────────────────────────────────────────
+      # RENAME ARTIFACTS
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 📝 Rename Artifacts
+        run: |
+          mkdir -p release-files
+          
+          # Rename Android APKs if they exist
+          if [ -d "./android-apks" ]; then
+            mv android-apks/app-release.apk release-files/EclipsePlayer-${{ steps.version.outputs.version }}-universal.apk || true
+            mv android-apks/app-armeabi-v7a-release.apk release-files/EclipsePlayer-${{ steps.version.outputs.version }}-armeabi-v7a.apk || true
+            mv android-apks/app-arm64-v8a-release.apk release-files/EclipsePlayer-${{ steps.version.outputs.version }}-arm64-v8a.apk || true
+            mv android-apks/app-x86_64-release.apk release-files/EclipsePlayer-${{ steps.version.outputs.version }}-x86_64.apk || true
+          fi
+          
+          # Rename Windows ZIP if it exists
+          if [ -d "./windows-release" ]; then
+            mv windows-release/EclipsePlayer-Windows.zip release-files/EclipsePlayer-${{ steps.version.outputs.version }}-Windows.zip || true
+          fi
+          
+          echo "=== Release Files ==="
+          ls -la release-files/
+
+      # ────────────────────────────────────────────────────────────────────────
+      # CREATE RELEASE
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: "🌑 Eclipse Player ${{ steps.version.outputs.version }}"
+          body: |
+            ## 🌑 Eclipse Player ${{ steps.version.outputs.version }}
+            
+            **Align Your Sound** — A modern, feature-rich music player for Android and Windows
+            
+            ---
+            
+            ### ✨ Features
+            
+            - 🎵 High-quality audio playback with background support
+            - 📁 Local music folder support
+            - 🌐 Navidrome/Subsonic server integration
+            - 📡 HTTP file server streaming with Basic Auth
+            - 🎙️ Podcast support via Podcast Index
+            - 📋 Custom playlists and favorites
+            - 📊 Playback history with heatmap visualization
+            - 🎨 Beautiful Eclipse-inspired dark theme
+            
+            ---
+            
+            ### 📥 Download Options
+            
+            #### 🤖 Android
+            
+            | File | Description | Compatibility |
+            |------|-------------|---------------|
+            | `EclipsePlayer-${{ steps.version.outputs.version }}-universal.apk` | Universal APK | All Android devices |
+            | `EclipsePlayer-${{ steps.version.outputs.version }}-arm64-v8a.apk` | 64-bit ARM | Most modern phones |
+            | `EclipsePlayer-${{ steps.version.outputs.version }}-armeabi-v7a.apk` | 32-bit ARM | Older phones |
+            | `EclipsePlayer-${{ steps.version.outputs.version }}-x86_64.apk` | 64-bit x86 | Emulators, Chromebooks |
+            
+            > 💡 **Tip:** If unsure, download the **universal** APK.
+            
+            #### 🪟 Windows
+            
+            | File | Description |
+            |------|-------------|
+            | `EclipsePlayer-${{ steps.version.outputs.version }}-Windows.zip` | Portable Windows build |
+            
+            > 📦 Extract the ZIP and run `eclipse_player.exe`
+            
+            ---
+            
+            ### 🖥️ Installation
+            
+            **Android:**
+            1. Download the APK file
+            2. Enable "Install from unknown sources" in device settings
+            3. Open the APK and install
+            4. Grant storage permission for local music
+            
+            **Windows:**
+            1. Download and extract the ZIP file
+            2. Run `eclipse_player.exe`
+            3. No installation required - fully portable!
+            
+            ---
+            
+            ### 📋 Changelog
+            
+            See [CHANGELOG.md](../../CHANGELOG.md) for detailed changes.
+            
+            ---
+            
+            ### 🔒 Privacy
+            
+            - No analytics or tracking
+            - All data stored locally on your device
+            - Server credentials never leave your device
+            
+          files: |
+            release-files/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

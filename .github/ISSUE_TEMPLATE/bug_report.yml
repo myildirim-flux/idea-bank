@@ -1,0 +1,174 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in Idea Bank
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Bug Report
+        
+        Thanks for taking the time to report a bug! Please fill out the form below to help us understand and fix the issue.
+        
+        > ⚠️ **Security Issues:** If you've found a security vulnerability, please do NOT open a public issue. Instead, email <!-- YOUR_EMAIL --> directly.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this bug hasn't been reported
+          required: true
+        - label: I am using the latest version of Idea Bank
+          required: true
+        - label: I have read the README and documentation
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug
+      placeholder: Describe what happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: I expected...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Instead, what happened was...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Open the app
+        2. Navigate to...
+        3. Tap on...
+        4. See error
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature
+    attributes:
+      label: Affected Feature
+      description: Which feature is affected?
+      options:
+        - Notes (Create/Edit/Delete)
+        - Folders/Vaults
+        - Drawing/Handwriting
+        - AI Chat
+        - Speech-to-Text
+        - File Attachments
+        - Cloud Sync (Appwrite)
+        - Encryption/Security
+        - Search
+        - Trash Bin
+        - Settings
+        - Authentication
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App Version
+      description: What version of Idea Bank are you using?
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: What device are you using?
+      placeholder: e.g., Samsung Galaxy S23, Pixel 7 Pro
+    validations:
+      required: true
+
+  - type: input
+    id: android-version
+    attributes:
+      label: Android Version
+      description: What Android version is installed?
+      placeholder: e.g., Android 14
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-source
+    attributes:
+      label: Installation Source
+      description: How did you install the app?
+      options:
+        - GitHub Release APK
+        - Built from source
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: cloud-sync
+    attributes:
+      label: Cloud Sync Enabled?
+      description: Is Appwrite cloud sync configured?
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs (if available)
+      description: Paste any error messages or stack traces
+      render: shell
+      placeholder: |
+        Paste error logs here...
+        
+        (If built from source, run `flutter logs` while reproducing the issue)
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Add screenshots to help explain the problem (drag and drop images)
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful
+      placeholder: Add any other context about the problem here...
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our project guidelines
+      options:
+        - label: I agree to be respectful and constructive in my communication
+          required: true

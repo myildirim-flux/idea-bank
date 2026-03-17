@@ -1,0 +1,145 @@
+name: 💡 Feature Request
+description: Suggest a new feature or enhancement for Idea Bank
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 💡 Feature Request
+        
+        Have an idea to make Idea Bank better? We'd love to hear it!
+        
+        Please fill out the form below to help us understand your suggestion.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this feature hasn't been requested
+          required: true
+        - label: This feature aligns with Idea Bank's focus on security and privacy
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Is this related to a frustration you have?
+      placeholder: |
+        I'm always frustrated when...
+        
+        Currently, there's no way to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature you'd like to see
+      placeholder: |
+        I would like to see...
+        
+        This feature would work by...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: |
+        I've tried...
+        
+        Another approach could be...
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What category does this feature fall under?
+      options:
+        - Note Management
+        - Organization (Folders/Tags)
+        - Drawing/Handwriting
+        - AI Features
+        - Voice/Speech
+        - File Attachments
+        - Cloud Sync
+        - Security/Encryption
+        - Search & Filter
+        - Import/Export
+        - UI/UX Improvements
+        - Performance
+        - Accessibility
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (Your Opinion)
+      description: How important is this feature to you?
+      options:
+        - Nice to have
+        - Would improve my workflow
+        - Important for my use case
+        - Critical - blocking my usage
+    validations:
+      required: true
+
+  - type: dropdown
+    id: implementation
+    attributes:
+      label: Willing to Contribute?
+      description: Would you be interested in implementing this feature?
+      options:
+        - "Yes, I'd like to implement this"
+        - "Yes, I can help with testing"
+        - "Yes, I can help with design/UX"
+        - "No, but I can provide feedback"
+        - "No"
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / Examples
+      description: Add any mockups, sketches, or examples from other apps (drag and drop images)
+      placeholder: |
+        Drag and drop images here, or describe the UI...
+        
+        Similar feature in [App Name]: ...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful
+      placeholder: Add any other context, links, or references here...
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy & Security Consideration
+      description: Please confirm this feature maintains Idea Bank's security principles
+      options:
+        - label: This feature does not compromise user privacy or data security
+          required: true
+        - label: This feature maintains the principle of local-first, encrypted storage
+          required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our project guidelines
+      options:
+        - label: I agree to be respectful and constructive in my communication
+          required: true

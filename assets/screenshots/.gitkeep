@@ -1,0 +1,22 @@
+# Screenshots Directory
+
+Place your app screenshots here for the README.
+
+## Recommended Screenshots:
+1. home_screen.png - Main home screen with notes grid
+2. note_editor.png - Note creation/editing screen
+3. drawing_page.png - Handwriting/drawing feature
+4. ai_chat.png - AI chat interface
+5. security_setup.png - Passphrase/security screen
+6. cloud_sync.png - Cloud synchronization feature
+
+## Recommended Dimensions:
+- Width: 1080px (or your device width)
+- Format: PNG or WebP
+- Aspect Ratio: Mobile portrait (9:16 or similar)
+
+## Tips:
+- Use consistent device frame or no frame at all
+- Enable dark mode for consistency with app theme
+- Hide status bar details if possible
+- Capture actual usage scenarios
