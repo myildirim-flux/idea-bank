@@ -7,7 +7,6 @@
 # ENVIRONMENT & SECRETS (CRITICAL - NEVER COMMIT THESE)
 # ============================================================================
 .env
-.env.*
 *.env
 lib/core/env.g.dart
 **/*.jks
