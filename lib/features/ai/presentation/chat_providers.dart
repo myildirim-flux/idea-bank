@@ -43,8 +43,9 @@ class ChatNotifier extends _$ChatNotifier {
 
   @override
   Future<ChatState> build(String? noteId) async {
-    final sessions =
-        await ref.watch(chatRepositoryProvider(noteId: noteId)).getSessions();
+    final sessions = await ref
+        .watch(chatRepositoryProvider(noteId: noteId))
+        .getSessions();
     if (sessions.isNotEmpty) {
       final activeSessionId = sessions.first.id;
       final messages = await ref
@@ -63,8 +64,9 @@ class ChatNotifier extends _$ChatNotifier {
   Future<void> loadSessions() async {
     if (!state.hasValue) return; // Guard against null state
     state = AsyncData(state.value!.copyWith(isLoading: true));
-    final sessions =
-        await ref.read(chatRepositoryProvider(noteId: noteId)).getSessions();
+    final sessions = await ref
+        .read(chatRepositoryProvider(noteId: noteId))
+        .getSessions();
     if (sessions.isNotEmpty) {
       await loadMessages(sessions.first.id);
     } else {
@@ -78,14 +80,17 @@ class ChatNotifier extends _$ChatNotifier {
     final messages = await ref
         .read(chatRepositoryProvider(noteId: noteId))
         .getMessages(sessionId);
-    final sessions =
-        await ref.read(chatRepositoryProvider(noteId: noteId)).getSessions();
-    state = AsyncData(state.value!.copyWith(
-          sessions: sessions,
-          activeSessionId: sessionId,
-          currentMessages: messages,
-          isLoading: false,
-        ));
+    final sessions = await ref
+        .read(chatRepositoryProvider(noteId: noteId))
+        .getSessions();
+    state = AsyncData(
+      state.value!.copyWith(
+        sessions: sessions,
+        activeSessionId: sessionId,
+        currentMessages: messages,
+        isLoading: false,
+      ),
+    );
   }
 
   Future<void> sendMessage(String text, {String? initialContext}) async {
@@ -93,14 +98,16 @@ class ChatNotifier extends _$ChatNotifier {
     var activeSessionId = state.value!.activeSessionId;
     if (activeSessionId == null) {
       await startNewChat(
-          title: text.substring(0, text.length > 50 ? 50 : text.length));
+        title: text.substring(0, text.length > 50 ? 50 : text.length),
+      );
       activeSessionId = state.value!.activeSessionId;
     }
 
     state = AsyncData(state.value!.copyWith(isLoading: true));
 
-    final fullMessage =
-        initialContext != null ? '$initialContext\n\n$text' : text;
+    final fullMessage = initialContext != null
+        ? '$initialContext\n\n$text'
+        : text;
 
     final userMessage = ChatMessage(
       id: _uuid.v4(),
@@ -155,20 +162,23 @@ class ChatNotifier extends _$ChatNotifier {
         .read(chatRepositoryProvider(noteId: noteId))
         .createSession(title: title);
     final sessions = [newSession, ...state.value?.sessions ?? <ChatSession>[]];
-    state = AsyncData(state.value!.copyWith(
-          sessions: sessions,
-          activeSessionId: newSession.id,
-          currentMessages: [],
-          isLoading: false,
-        ));
+    state = AsyncData(
+      state.value!.copyWith(
+        sessions: sessions,
+        activeSessionId: newSession.id,
+        currentMessages: [],
+        isLoading: false,
+      ),
+    );
   }
 
   Future<void> deleteSession(String sessionId) async {
     if (!state.hasValue) return; // Guard against null state
     final chatRepository = ref.read(chatRepositoryProvider(noteId: noteId));
     await chatRepository.deleteSession(sessionId);
-    final sessions =
-        state.value!.sessions.where((s) => s.id != sessionId).toList();
+    final sessions = state.value!.sessions
+        .where((s) => s.id != sessionId)
+        .toList();
     if (state.value!.activeSessionId == sessionId) {
       if (sessions.isNotEmpty) {
         await loadMessages(sessions.first.id);

@@ -6,7 +6,12 @@ final errorServiceProvider = Provider<ErrorService>((ref) {
 });
 
 class ErrorService {
-  void handleException(BuildContext context, dynamic error, StackTrace stackTrace, {String? message}) {
+  void handleException(
+    BuildContext context,
+    dynamic error,
+    StackTrace stackTrace, {
+    String? message,
+  }) {
     debugPrint('Error: $error\nStackTrace: $stackTrace');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

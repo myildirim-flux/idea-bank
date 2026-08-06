@@ -23,6 +23,9 @@
   </p>
 
   <p align="center">
+    <a href="https://github.com/myildirim-flux/idea-bank/actions/workflows/test.yml">
+      <img src="https://github.com/myildirim-flux/idea-bank/actions/workflows/test.yml/badge.svg" alt="Test Suite"/>
+    </a>
     <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/>
     <img src="https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart"/>
     <img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android"/>

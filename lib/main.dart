@@ -151,7 +151,9 @@ class _NotesAppState extends ConsumerState<NotesApp> {
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.textPrimary,
-            side: BorderSide(color: AppColors.blueGrey600.withValues(alpha: 0.5)),
+            side: BorderSide(
+              color: AppColors.blueGrey600.withValues(alpha: 0.5),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),

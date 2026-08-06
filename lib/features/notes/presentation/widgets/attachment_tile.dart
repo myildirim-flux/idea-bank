@@ -26,13 +26,16 @@ class AttachmentTile extends ConsumerWidget {
     } else if (fileType.startsWith('video/')) {
       return Icons.video_file;
     } else if (fileType == 'application/msword' ||
-        fileType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        fileType ==
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       return Icons.description; // Word document
     } else if (fileType == 'application/vnd.ms-excel' ||
-        fileType == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        fileType ==
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
       return Icons.table_chart; // Excel document
     } else if (fileType == 'application/vnd.ms-powerpoint' ||
-        fileType == 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+        fileType ==
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
       return Icons.slideshow; // PowerPoint document
     } else if (fileType == 'text/plain') {
       return Icons.text_snippet; // Text file
@@ -49,7 +52,9 @@ class AttachmentTile extends ConsumerWidget {
       child: ListTile(
         leading: Icon(_getFileIcon(attachment.fileType)),
         title: Text(attachment.originalFilename),
-        subtitle: Text('${(attachment.fileSize! / 1024).toStringAsFixed(2)} KB'),
+        subtitle: Text(
+          '${(attachment.fileSize! / 1024).toStringAsFixed(2)} KB',
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.delete),
           onPressed: () async {
@@ -59,7 +64,9 @@ class AttachmentTile extends ConsumerWidget {
               builder: (BuildContext context) {
                 return AlertDialog(
                   title: const Text('Delete Attachment'),
-                  content: Text('Are you sure you want to delete "${attachment.originalFilename}"?'),
+                  content: Text(
+                    'Are you sure you want to delete "${attachment.originalFilename}"?',
+                  ),
                   actions: <Widget>[
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),

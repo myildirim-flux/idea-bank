@@ -26,7 +26,7 @@ lib/core/env.g.dart
 .packages
 .pub-cache/
 .pub/
-pubspec.lock
+# pubspec.lock (Tracked for Flutter apps to ensure deterministic CI builds)
 
 # Build outputs
 /build/
@@ -36,9 +36,8 @@ pubspec.lock
 .flutter-plugins
 .flutter-plugins-dependencies
 
-# Generated files
-*.g.dart
-!lib/core/env.g.dart.example
+# Generated files (only ignore secret-containing env.g.dart)
+lib/core/env.g.dart
 *.freezed.dart
 *.mocks.dart
 
@@ -46,15 +45,14 @@ pubspec.lock
 **/doc/api/
 .dart_doc/
 
-# iOS Flutter specific
-**/ios/Flutter/.last_build_id
-**/ios/Flutter/App.framework
-**/ios/Flutter/Flutter.framework
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Generated.xcconfig
+# Desktop Flutter specific
 **/ios/Flutter/ephemeral/
 **/ios/Pods/
 **/ios/.symlinks/
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
 
 # ============================================================================
 # ANDROID
